@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edge Diagnostic Research — Open-Source AI Diagnostics for Underserved Healthcare</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0F1A1E;
+            --ink-light: #3A4F58;
+            --ink-muted: #6B8490;
+            --teal: #0A7B6F;
+            --teal-deep: #065E54;
+            --teal-glow: #0CCEA8;
+            --warm: #F6F2ED;
+            --warm-mid: #EDE7DF;
+            --white: #FAFAF8;
+            --accent-coral: #E8724A;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            color: var(--ink);
+            background: var(--white);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ---- NAV ---- */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            padding: 1.25rem 3rem;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(250, 250, 248, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(15, 26, 30, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .nav-logo {
+            display: flex; align-items: center; gap: 0.75rem;
+            text-decoration: none; color: var(--ink);
+        }
+
+        .nav-logo-mark {
+            width: 36px; height: 36px;
+            background: var(--teal);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-logo-mark::before {
+            content: '';
+            position: absolute;
+            width: 20px; height: 20px;
+            border: 2.5px solid rgba(255,255,255,0.9);
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .nav-logo-mark::after {
+            content: '';
+            position: absolute;
+            width: 8px; height: 8px;
+            background: var(--teal-glow);
+            border-radius: 50%;
+            top: 6px; right: 6px;
+            box-shadow: 0 0 6px var(--teal-glow);
+        }
+
+        .nav-logo-text {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-links {
+            display: flex; gap: 2rem; align-items: center;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none; color: var(--ink-light);
+            font-size: 0.875rem; font-weight: 500;
+            letter-spacing: 0.02em;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--teal); }
+
+        .nav-cta {
+            padding: 0.6rem 1.4rem;
+            background: var(--teal);
+            color: var(--white) !important;
+            border-radius: 6px;
+            font-weight: 600 !important;
+            transition: background 0.2s, transform 0.2s !important;
+        }
+
+        .nav-cta:hover {
+            background: var(--teal-deep) !important;
+            transform: translateY(-1px);
+        }
+
+        /* ---- HERO ---- */
+        .hero {
+            min-height: 100vh;
+            display: flex; align-items: center;
+            padding: 8rem 3rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -200px; right: -200px;
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(10, 123, 111, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -100px; left: -100px;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(232, 114, 74, 0.04) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-grid {
+            max-width: 1200px; margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-content { position: relative; z-index: 2; }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            background: var(--warm);
+            border: 1px solid var(--warm-mid);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--teal-deep);
+            margin-bottom: 1.5rem;
+            animation: fadeUp 0.6s ease both;
+        }
+
+        .hero-badge::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: var(--teal-glow);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--teal-glow);
+            animation: pulse 2s ease infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        h1 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2.5rem, 4.5vw, 3.75rem);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            color: var(--ink);
+            margin-bottom: 1.5rem;
+            animation: fadeUp 0.6s ease 0.1s both;
+        }
+
+        h1 em {
+            font-style: italic;
+            color: var(--teal);
+        }
+
+        .hero-desc {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: var(--ink-light);
+            max-width: 500px;
+            margin-bottom: 2rem;
+            animation: fadeUp 0.6s ease 0.2s both;
+        }
+
+        .hero-actions {
+            display: flex; gap: 1rem; flex-wrap: wrap;
+            animation: fadeUp 0.6s ease 0.3s both;
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.85rem 1.75rem;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            cursor: pointer; border: none;
+        }
+
+        .btn-primary {
+            background: var(--teal);
+            color: white;
+            box-shadow: 0 2px 12px rgba(10, 123, 111, 0.25);
+        }
+
+        .btn-primary:hover {
+            background: var(--teal-deep);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(10, 123, 111, 0.3);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--ink);
+            border: 1.5px solid rgba(15, 26, 30, 0.15);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--teal);
+            color: var(--teal);
+            transform: translateY(-2px);
+        }
+
+        /* Hero visual */
+        .hero-visual {
+            position: relative;
+            animation: fadeUp 0.8s ease 0.3s both;
+        }
+
+        .device-showcase {
+            background: var(--warm);
+            border-radius: 20px;
+            padding: 3rem;
+            position: relative;
+            border: 1px solid var(--warm-mid);
+        }
+
+        .device-illustration {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: linear-gradient(135deg, var(--ink) 0%, #1a3040 100%);
+            border-radius: 12px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .device-illustration::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.02) 30px, rgba(255,255,255,0.02) 31px),
+                repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(255,255,255,0.02) 30px, rgba(255,255,255,0.02) 31px);
+        }
+
+        .scan-ring {
+            width: 120px; height: 120px;
+            border: 2px solid var(--teal-glow);
+            border-radius: 50%;
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+            animation: scanPulse 3s ease infinite;
+        }
+
+        .scan-ring::before {
+            content: '';
+            position: absolute;
+            width: 140px; height: 140px;
+            border: 1px solid rgba(12, 206, 168, 0.3);
+            border-radius: 50%;
+            animation: scanPulse 3s ease 0.5s infinite;
+        }
+
+        .scan-ring::after {
+            content: '';
+            position: absolute;
+            width: 160px; height: 160px;
+            border: 1px solid rgba(12, 206, 168, 0.15);
+            border-radius: 50%;
+            animation: scanPulse 3s ease 1s infinite;
+        }
+
+        @keyframes scanPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.08); opacity: 0.7; }
+        }
+
+        .scan-crosshair {
+            width: 40px; height: 40px;
+            position: relative;
+        }
+
+        .scan-crosshair::before,
+        .scan-crosshair::after {
+            content: '';
+            position: absolute;
+            background: var(--teal-glow);
+        }
+
+        .scan-crosshair::before {
+            width: 2px; height: 100%;
+            left: 50%; transform: translateX(-50%);
+        }
+
+        .scan-crosshair::after {
+            height: 2px; width: 100%;
+            top: 50%; transform: translateY(-50%);
+        }
+
+        .device-label {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-top: 1.5rem;
+            font-weight: 500;
+        }
+
+        .device-stats {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1rem; margin-top: 1.5rem;
+        }
+
+        .device-stat {
+            text-align: center;
+            padding: 0.75rem;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid var(--warm-mid);
+        }
+
+        .device-stat-value {
+            font-family: 'Fraunces', serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--teal);
+        }
+
+        .device-stat-label {
+            font-size: 0.7rem;
+            color: var(--ink-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-top: 0.2rem;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---- MISSION ---- */
+        .mission {
+            padding: 6rem 3rem;
+            background: var(--ink);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mission::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--teal-glow), transparent);
+        }
+
+        .mission-inner {
+            max-width: 1200px; margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 4rem;
+            align-items: start;
+        }
+
+        .mission-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--teal-glow);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .mission h2 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(1.75rem, 3vw, 2.5rem);
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        .mission-text {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .mission-text p + p { margin-top: 1.25rem; }
+
+        /* ---- PILLARS ---- */
+        .pillars {
+            padding: 6rem 3rem;
+            background: var(--warm);
+        }
+
+        .pillars-inner {
+            max-width: 1200px; margin: 0 auto;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--teal);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .pillars h2 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(1.75rem, 3vw, 2.5rem);
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 3rem;
+            max-width: 600px;
+        }
+
+        .pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .pillar-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2.25rem;
+            border: 1px solid rgba(15, 26, 30, 0.06);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pillar-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(15, 26, 30, 0.08);
+        }
+
+        .pillar-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1.25rem;
+            font-size: 1.5rem;
+        }
+
+        .pillar-icon.edge { background: rgba(10, 123, 111, 0.1); }
+        .pillar-icon.data { background: rgba(232, 114, 74, 0.1); }
+        .pillar-icon.open { background: rgba(15, 26, 30, 0.06); }
+
+        .pillar-card h3 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.01em;
+        }
+
+        .pillar-card p {
+            font-size: 0.92rem;
+            line-height: 1.7;
+            color: var(--ink-light);
+        }
+
+        /* ---- APPROACH ---- */
+        .approach {
+            padding: 6rem 3rem;
+        }
+
+        .approach-inner {
+            max-width: 1200px; margin: 0 auto;
+        }
+
+        .approach h2 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(1.75rem, 3vw, 2.5rem);
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 3rem;
+        }
+
+        .approach-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            position: relative;
+        }
+
+        .approach-step {
+            padding: 2rem;
+            position: relative;
+            border-left: 1px solid var(--warm-mid);
+        }
+
+        .approach-step:first-child { border-left: none; }
+
+        .step-number {
+            font-family: 'Fraunces', serif;
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: var(--teal);
+            opacity: 0.4;
+            line-height: 1;
+            margin-bottom: 1rem;
+        }
+
+        .approach-step h3 {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .approach-step p {
+            font-size: 0.88rem;
+            line-height: 1.65;
+            color: var(--ink-muted);
+        }
+
+        /* ---- OPEN SOURCE ---- */
+        .opensource {
+            padding: 4rem 3rem;
+            background: var(--warm);
+        }
+
+        .opensource-inner {
+            max-width: 800px; margin: 0 auto;
+            text-align: center;
+        }
+
+        .opensource h2 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(1.5rem, 2.5vw, 2rem);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .opensource p {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--ink-light);
+            margin-bottom: 2rem;
+        }
+
+        .license-tags {
+            display: flex; gap: 0.75rem;
+            justify-content: center; flex-wrap: wrap;
+        }
+
+        .license-tag {
+            padding: 0.5rem 1.25rem;
+            border-radius: 100px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            border: 1.5px solid;
+        }
+
+        .license-tag.sw { border-color: var(--teal); color: var(--teal); background: rgba(10,123,111,0.05); }
+        .license-tag.model { border-color: var(--accent-coral); color: var(--accent-coral); background: rgba(232,114,74,0.05); }
+        .license-tag.hw { border-color: var(--ink-light); color: var(--ink-light); background: rgba(15,26,30,0.03); }
+
+        /* ---- CONTACT / CTA ---- */
+        .contact {
+            padding: 6rem 3rem;
+            position: relative;
+        }
+
+        .contact-inner {
+            max-width: 700px; margin: 0 auto;
+            text-align: center;
+        }
+
+        .contact h2 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(1.75rem, 3vw, 2.5rem);
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+
+        .contact p {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--ink-light);
+            margin-bottom: 2rem;
+        }
+
+        .contact-email {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--teal);
+            text-decoration: none;
+            padding: 1rem 2rem;
+            background: rgba(10, 123, 111, 0.06);
+            border-radius: 12px;
+            transition: all 0.25s;
+        }
+
+        .contact-email:hover {
+            background: rgba(10, 123, 111, 0.12);
+            transform: translateY(-2px);
+        }
+
+        /* ---- FOOTER ---- */
+        footer {
+            padding: 3rem;
+            border-top: 1px solid rgba(15, 26, 30, 0.06);
+        }
+
+        .footer-inner {
+            max-width: 1200px; margin: 0 auto;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .footer-left {
+            display: flex; align-items: center; gap: 0.75rem;
+        }
+
+        .footer-logo-mark {
+            width: 28px; height: 28px;
+            background: var(--teal);
+            border-radius: 6px;
+            position: relative; overflow: hidden;
+        }
+
+        .footer-logo-mark::before {
+            content: '';
+            position: absolute;
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.8);
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .footer-name {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--ink);
+        }
+
+        .footer-right {
+            font-size: 0.82rem;
+            color: var(--ink-muted);
+        }
+
+        .footer-right span {
+            margin: 0 0.25rem;
+        }
+
+        /* ---- RESPONSIVE ---- */
+        @media (max-width: 900px) {
+            nav { padding: 1rem 1.5rem; }
+            .nav-links { display: none; }
+            .hero { padding: 7rem 1.5rem 3rem; }
+            .hero-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+            .mission-inner { grid-template-columns: 1fr; gap: 2rem; }
+            .pillars-grid { grid-template-columns: 1fr; }
+            .approach-grid { grid-template-columns: 1fr 1fr; }
+            .approach-step { border-left: none; border-bottom: 1px solid var(--warm-mid); }
+            .device-stats { grid-template-columns: repeat(3, 1fr); }
+            .section-label, .mission-label { text-align: left; }
+            .pillars, .approach, .mission, .opensource, .contact { padding: 4rem 1.5rem; }
+            .footer-inner { flex-direction: column; gap: 1rem; text-align: center; }
+        }
+
+        @media (max-width: 600px) {
+            .approach-grid { grid-template-columns: 1fr; }
+            .license-tags { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <a href="#" class="nav-logo">
+        <div class="nav-logo-mark"></div>
+        <span class="nav-logo-text">Edge Diagnostic Research</span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="#mission">Mission</a></li>
+        <li><a href="#research">Research</a></li>
+        <li><a href="#approach">Approach</a></li>
+        <li><a href="#contact" class="nav-cta">Get Involved</a></li>
+    </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-grid">
+        <div class="hero-content">
+            <div class="hero-badge">501(c)(3) Research Nonprofit &bull; Ohio</div>
+            <h1>AI diagnostics at the <em>edge</em> of care</h1>
+            <p class="hero-desc">
+                We build open-source, portable AI diagnostic tools that work without cloud connectivity — bringing clinical-grade screening to the communities that need it most.
+            </p>
+            <div class="hero-actions">
+                <a href="#contact" class="btn btn-primary">
+                    <span>Partner with Us</span>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+                <a href="#research" class="btn btn-ghost">Our Research</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="device-showcase">
+                <div class="device-illustration">
+                    <div class="scan-ring">
+                        <div class="scan-crosshair"></div>
+                    </div>
+                    <div class="device-label">Edge AI Classification &bull; Real-Time</div>
+                </div>
+                <div class="device-stats">
+                    <div class="device-stat">
+                        <div class="device-stat-value">&lt;2s</div>
+                        <div class="device-stat-label">Inference</div>
+                    </div>
+                    <div class="device-stat">
+                        <div class="device-stat-value">0</div>
+                        <div class="device-stat-label">Cloud Dependency</div>
+                    </div>
+                    <div class="device-stat">
+                        <div class="device-stat-value">Open</div>
+                        <div class="device-stat-label">Source</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- MISSION -->
+<section class="mission" id="mission">
+    <div class="mission-inner">
+        <div>
+            <div class="mission-label">Our Mission</div>
+            <h2>Closing the diagnostic gap with open technology</h2>
+        </div>
+        <div class="mission-text">
+            <p>
+                Over 2 billion people worldwide lack access to basic diagnostic services. In rural clinics and field settings, the specialists, connectivity, and equipment required for early detection simply don't exist. Lives are lost not because solutions are impossible, but because they haven't been built for these environments.
+            </p>
+            <p>
+                Edge Diagnostic Research develops portable, self-contained AI diagnostic devices powered by edge computing — tools that run entirely on-device with no internet required. We publish all models, datasets, and hardware designs under open licenses, ensuring that the communities and institutions who need these tools can build, adapt, and deploy them freely.
+            </p>
+            <p>
+                Our flagship project is an edge-deployed skin lesion classifier built on low-cost, commercially available hardware. It's the first step in a broader platform of open-source diagnostic tools designed for the field.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- PILLARS -->
+<section class="pillars" id="research">
+    <div class="pillars-inner">
+        <div class="section-label">Research Focus</div>
+        <h2>Three pillars of our work</h2>
+        <div class="pillars-grid">
+            <div class="pillar-card">
+                <div class="pillar-icon edge">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#0A7B6F" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#0A7B6F" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#0A7B6F" stroke-width="1.5"/><circle cx="17.5" cy="17.5" r="3.5" stroke="#0A7B6F" stroke-width="1.5"/></svg>
+                </div>
+                <h3>Edge AI Diagnostics</h3>
+                <p>Developing and optimizing classification models that run on portable, low-power hardware accelerators — enabling real-time diagnostic inference in disconnected field environments.</p>
+            </div>
+            <div class="pillar-card">
+                <div class="pillar-icon data">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 3C7 3 3 5 3 7s4 4 9 4 9-2 9-4-4-4-9-4z" stroke="#E8724A" stroke-width="1.5"/><path d="M3 7v5c0 2 4 4 9 4s9-2 9-4V7" stroke="#E8724A" stroke-width="1.5"/><path d="M3 12v5c0 2 4 4 9 4s9-2 9-4v-5" stroke="#E8724A" stroke-width="1.5"/></svg>
+                </div>
+                <h3>Diverse Datasets</h3>
+                <p>Building representative, clinically annotated medical datasets that reflect the full range of human skin tones and conditions — addressing critical gaps in publicly available training data.</p>
+            </div>
+            <div class="pillar-card">
+                <div class="pillar-icon open">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke="#3A4F58" stroke-width="1.5" stroke-linejoin="round"/><path d="M2 17l10 5 10-5" stroke="#3A4F58" stroke-width="1.5" stroke-linejoin="round"/><path d="M2 12l10 5 10-5" stroke="#3A4F58" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                </div>
+                <h3>Open Platform</h3>
+                <p>Publishing all software, models, and hardware designs under open licenses — enabling researchers, health ministries, and NGOs worldwide to build and adapt our tools without commercial barriers.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- APPROACH -->
+<section class="approach" id="approach">
+    <div class="approach-inner">
+        <div class="section-label">Our Approach</div>
+        <h2>From prototype to field validation</h2>
+        <div class="approach-grid">
+            <div class="approach-step">
+                <div class="step-number">01</div>
+                <h3>Build & Benchmark</h3>
+                <p>Develop edge-optimized models on portable hardware and rigorously characterize performance across lesion types, skin tones, and imaging conditions.</p>
+            </div>
+            <div class="approach-step">
+                <div class="step-number">02</div>
+                <h3>Clinical Collaboration</h3>
+                <p>Partner with academic medical centers and dermatology departments to validate device classifications against expert diagnosis in prospective studies.</p>
+            </div>
+            <div class="approach-step">
+                <div class="step-number">03</div>
+                <h3>Dataset Curation</h3>
+                <p>Build diverse, IRB-approved datasets with proper consent and clinical annotation — producing public goods that benefit the entire research community.</p>
+            </div>
+            <div class="approach-step">
+                <div class="step-number">04</div>
+                <h3>Open Release</h3>
+                <p>Publish models, code, data, and hardware designs under open licenses. Support community adoption through documentation and technical guidance.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- OPEN SOURCE -->
+<section class="opensource">
+    <div class="opensource-inner">
+        <div class="section-label">Commitment to Openness</div>
+        <h2>Open by design, protected by license</h2>
+        <p>
+            Everything we build is freely available for research, education, and humanitarian use. Commercial use requires a separate license — ensuring our work serves people, not extraction.
+        </p>
+        <div class="license-tags">
+            <span class="license-tag sw">Software: AGPL-3.0</span>
+            <span class="license-tag model">Models & Data: CC BY-NC-SA 4.0</span>
+            <span class="license-tag hw">Hardware: CERN-OHL-S v2</span>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+    <div class="contact-inner">
+        <div class="section-label">Get Involved</div>
+        <h2>Let's build this together</h2>
+        <p>
+            We're seeking clinical collaborators, dataset partners, grant co-investigators, and open-source contributors. If you share our belief that life-saving diagnostics should be accessible to everyone, we'd like to hear from you.
+        </p>
+        <a href="mailto:info@edgediagnosticresearch.org" class="contact-email">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 6l8 5 8-5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            info@edgediagnosticresearch.org
+        </a>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-inner">
+        <div class="footer-left">
+            <div class="footer-logo-mark"></div>
+            <span class="footer-name">Edge Diagnostic Research</span>
+        </div>
+        <div class="footer-right">
+            501(c)(3) Nonprofit <span>&bull;</span> Ohio <span>&bull;</span> &copy; 2026
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
